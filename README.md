@@ -76,3 +76,9 @@ class DropBoxController{
 ~~~ 
 
 
+## Dicas 
+
+~~~HTML
+<!-- Informar para o input que ele vai receber multiplos arquivos -->
+<input type="file" id="files" style="display:none;" multiple>
+~~~
