@@ -24,6 +24,7 @@ class DropBoxController{
   /**
    *  updateTask(files)
    *  files: Recebe uma coleção do campo input-file com os itens selecionados
+   * 
    */
   updateTask(files){
     let promises = [];
