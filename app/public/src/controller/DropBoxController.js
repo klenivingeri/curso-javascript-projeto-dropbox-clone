@@ -17,17 +17,19 @@ class DropBoxController{
 
     this.inputFilesEl.addEventListener('change', e => {
       // e.target.files recebe uma coleção com 1 ou mais itens
-      this.updateTask(e.target.files)
+      this.updateTask(e.target.files) //Envia para o servidor os arquivos
+      //toggle da barra de progress de update
+      this.modalShow();
 
-      this.snackModalEl.style.display = 'block';
+      //zera o campo
+      this.inputFilesEl.value = '';
+
     })
 
   }
 
-  /**
-   *  updateTask(files)
+  /** updateTask(files)
    *  files: Recebe uma coleção do campo input-file com os itens selecionados
-   * 
    */
   updateTask(files){
     let promises = [];
@@ -38,6 +40,7 @@ class DropBoxController{
 
         ajax.open('POST','/upload');
         ajax.onload = event => { // dados recuperados
+          this.modalShow(false);
           try{
             resolve(JSON.parse(ajax.responseText))
           } catch(e){
@@ -45,7 +48,9 @@ class DropBoxController{
           }
         }
         ajax.onerror = event =>{ // ocorrer algum erro com ajax
+          this.modalShow(false);
           reject(event)
+          
         }
 
         ajax.upload.onprogress = event =>{ // executa toda vez que envia um novo pedaço do pacote
@@ -65,6 +70,11 @@ class DropBoxController{
 
   } // updateTask
 
+/** uploadProgress(event, file)
+ *  Controla o processo de update dos arquivos
+ *  Inseri no modal as informações de update
+ *  Esse controle é feito toda vez que é enviado fragmentos do arquivo
+ */
   uploadProgress(event, file ){
     //timespent armazena quanto temos já se passou depois do inicio do upload 
     let timespent = Date.now() - this.startUploadTime;
@@ -81,6 +91,9 @@ class DropBoxController{
    
   } //uploadProgress
 
+/** formatTimeToHuman(duration)
+ *  Faz o calculo de quanto tempo falta para terminar o update
+ */
   formatTimeToHuman(duration){
 
     let seconds = parseInt((duration / 1000) % 60); //Pegando o resto da divisao em seconds ,  modulo
@@ -94,10 +107,19 @@ class DropBoxController{
     } else {
       return `${seconds} segundos`;
     }
-    return '';
-  }
+    return '0';
+
+  }// formatTimeToHuman
+
+/** modalShow
+ *  Toggle da barra de progresso
+ */
+  modalShow( show = true){
+    this.snackModalEl.style.display = (show) ? 'block' : 'none';
+  } //modalShow
 
 }
+
 
 
  // 
