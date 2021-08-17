@@ -17,7 +17,7 @@ Projeto desenvolvido como exemplo do Curso Completo de JavaScript na Udemy.com.
 - `npm install formidable --save` Auxilia a acessar do dados de formData()
 - `npm start` dentro da pasta do app
 
-Dentro da pasta public criei src/index.js e dentro da pasta /src criei uma outra pasta /controller/DropBoxController.js
+Dentro da pasta public criei src/index.js e dentro do /src criei uma outra pasta /controller/DropBoxController.js
 ~~~Javascript
 // public/src/controller/DropBoxController.js
 class DropBoxController{
@@ -237,6 +237,23 @@ uploadProgress(event, file){
 ~~~
 
 ## Dicas 
+
+
+~~~javascript
+//Dentro do switch pode colocar os case em cascata para um unico return
+ switch(name){
+   case 'maria':
+     return console.log('Você digitou Maria')
+    break;
+    case 'pedro':
+      case 'luiz':
+        case 'joana':
+          return console.log('Voce digitou Pedro, Luiz ou Joana');
+    break;
+    default:
+      return console.log('Nada foi encontrado');
+ }
+~~~
 
 ~~~HTML
 <!-- Informar para o input que ele vai receber multiplos arquivos -->
