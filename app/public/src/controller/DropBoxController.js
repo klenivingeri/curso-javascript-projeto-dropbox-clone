@@ -348,6 +348,8 @@ class DropBoxController{
         ${this.getFileIconView(file)}
         <div class="name text-center">${file.name}</div>
     `
+    
+    this.initEventsLi(li);// adiciona um evento 
     return  li;
   }// getFileView
 
@@ -363,7 +365,6 @@ class DropBoxController{
 
         let key = snapshotItem.key // recebe o id(key)
         let data = snapshotItem.val() // recebe os dados
-        console.log(key, data)
 
         this.listFilesEl.appendChild(this.getFileView(data, key));
       })
@@ -371,6 +372,47 @@ class DropBoxController{
     })
   } // readFiles
 
+/** initEventsLi
+ * Adiciona um evento para verificar a interação do usuario com as li
+ */
+  initEventsLi(li){
+    li.addEventListener('click', e =>{
+      if(e.shiftKey){ // Se o shit estiver precionado faça:
+        // Pega a primeira li com a class .selected
+          let firstLi = this.listFilesEl.querySelector('.selected');
+          //a primeira vez que entrar aqui ele não vai recuperar nada, pq é inserido o select só no final da função
+          // mas na segunda vez que ele passar aqui ele já vai ter a Li select + o proximo  elemento clicado
+
+          if(firstLi){
+            let indexStart;
+            let indexEnd;
+            let lis = li.parentElement.childNodes
+            lis.forEach((el, index) =>{
+              if(firstLi === el) indexStart = index
+              if(li === el) indexEnd = index
+            })
+            // Independente se a seleção for do menor para o maior, ou do maior para o menor
+            let index = [indexStart, indexEnd].sort(); // o sort vai deixar eles de forma ordenada.
+            
+            lis.forEach((el, i) =>{
+              if(i >= index[0] && i<= index[1]){
+                el.classList.add('selected');
+              }
+            })
+            return true ; // Para a execução, se não a proxima função vai remover os selected
+          }
+      }
+
+      if(!e.ctrlKey){ // O Ctrl está precisionado ? se não faça:
+        this.listFilesEl.querySelectorAll('li.selected').forEach(el =>{
+          el.classList.remove('selected'); //remova o 'selected' da classe
+        })
+      }
+      li.classList.toggle('selected')
+
+    })
+
+  } // initEventsLi
 
 } 
 

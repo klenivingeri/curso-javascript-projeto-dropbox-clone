@@ -292,3 +292,13 @@ let h2 = document.createElement('h1');
 h2.innerHTML = `testando appendChild`
 body.appendChild(h2); // Success
 ~~~
+
+#### .parentElement
+~~~Javascript 
+let li = document.querySelector('li')
+console.log(li.parentElement)
+// <ul></ul>  retorna o elemento pai
+//------------------------------------
+console.log(li.parentElement.childNodes);
+//Pega todos os elemento filhos 
+~~~
