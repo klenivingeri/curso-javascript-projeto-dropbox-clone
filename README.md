@@ -238,7 +238,7 @@ uploadProgress(event, file){
 
 ## Dicas 
 
-
+#### switch
 ~~~javascript
 //Dentro do switch pode colocar os case em cascata para um unico return
  switch(name){
@@ -254,8 +254,30 @@ uploadProgress(event, file){
       return console.log('Nada foi encontrado');
  }
 ~~~
-
+#### multiple value
 ~~~HTML
 <!-- Informar para o input que ele vai receber multiplos arquivos -->
 <input type="file" id="files" style="display:none;" multiple>
+~~~
+
+#### JSON
+~~~javascript
+//Quando recebemos um JSON com caracteres especiais
+const obj = {
+    "files": {
+        "input-file": {
+            "size": 81242,
+            "path": "upload\\upload_fc8f9ae10428817f790c0a2ae0888f88.png",
+            "name": "2020-07-14.png",
+            "type": "image/png",
+            "mtime": "2021-08-17T22:51:33.958Z"
+        }
+    }
+}
+
+//dessa forma evitamos erros na hora da leitura do codigo
+let itemName  =  obj.files.['input-file'].name
+
+console.log(itemName);
+
 ~~~

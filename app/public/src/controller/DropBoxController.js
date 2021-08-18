@@ -7,7 +7,25 @@ class DropBoxController{
     this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg')
     this.namefileEl = this.snackModalEl.querySelector('.filename')
     this.timeleftEl = this.snackModalEl.querySelector('.timeleft')
+    this.connectFireBase();
     this.initEvents(); //4
+  
+
+  }
+  connectFireBase(){
+    var firebaseConfig = {
+      apiKey: "AIzaSyDMSkvvD44RDcigLvI-EvzA1Uxt6F0yFMc",
+      authDomain: "dropbox-clone-d458a.firebaseapp.com",
+      databaseURL: "https://dropbox-clone-d458a-default-rtdb.firebaseio.com",
+      projectId: "dropbox-clone-d458a",
+      storageBucket: "dropbox-clone-d458a.appspot.com",
+      messagingSenderId: "106312707693",
+      appId: "1:106312707693:web:df0545a41c41def5565964",
+      measurementId: "G-7DFXGB712Y"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
   }
 
   initEvents() {
@@ -16,21 +34,47 @@ class DropBoxController{
     })
 
     this.inputFilesEl.addEventListener('change', e => {
+      //Desabilita o botão para evitar infileiramento
+      this.btnSendFileEl.disabled = true;
+
+
       // e.target.files recebe uma coleção com 1 ou mais itens
-      this.updateTask(e.target.files) //Envia para o servidor os arquivos
-      //toggle da barra de progress de update
+      //Envia para o servidor os arquivos
+      this.updateTask(e.target.files).then( responses =>{ // retorna varias promisses
+
+        responses.forEach( resp =>{
+         //console.log(resp.files['input-file']);
+          this.getFirebaseRef().push().set(resp.files['input-file'])
+        })
+
+        this.uploadComplite() //reseta form
+      }).catch(err =>{
+        this.uploadComplite() //reseta form
+        console.error(err)
+      })
+      
       this.modalShow();
-
-      //zera o campo
-      this.inputFilesEl.value = '';
-
+      
     })
 
   }
+/** uploadComplite 
+ *  Quando processo é completado, fechamos a barra, e limpamos o form
+*/
+  uploadComplite(){
+    //toggle da barra de progress de update
+    this.modalShow(false);
 
-  /** updateTask(files)
-   *  files: Recebe uma coleção do campo input-file com os itens selecionados
-   */
+    //zera o campo
+    this.inputFilesEl.value = '';
+
+    //habilita o botão quando finaliza o update
+    this.btnSendFileEl.disabled = false;
+  }//uploadComplite
+
+/** updateTask(files)
+*  files: Recebe uma coleção do campo input-file com os itens selecionados
+*/
   updateTask(files){
     let promises = [];
   
@@ -40,7 +84,6 @@ class DropBoxController{
 
         ajax.open('POST','/upload');
         ajax.onload = event => { // dados recuperados
-          this.modalShow(false);
           try{
             resolve(JSON.parse(ajax.responseText))
           } catch(e){
@@ -48,9 +91,7 @@ class DropBoxController{
           }
         }
         ajax.onerror = event =>{ // ocorrer algum erro com ajax
-          this.modalShow(false);
           reject(event)
-          
         }
 
         ajax.upload.onprogress = event =>{ // executa toda vez que envia um novo pedaço do pacote
@@ -111,6 +152,14 @@ class DropBoxController{
 
   }// formatTimeToHuman
 
+/**
+ * 
+ */
+  getFirebaseRef(){
+    return firebase.database().ref("files")
+  }
+
+
 /** modalShow
  *  Toggle da barra de progresso
  */
@@ -134,7 +183,7 @@ class DropBoxController{
         </svg>
         `;
       break;
-      
+
       case 'audio/mp4':
       case 'audio/quicktime':
         return `
@@ -298,6 +347,10 @@ class DropBoxController{
     </li>
     `
   }// getFileView
+
+ 
+
+
 } 
 
 
