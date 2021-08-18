@@ -7,8 +7,10 @@ class DropBoxController{
     this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg')
     this.namefileEl = this.snackModalEl.querySelector('.filename')
     this.timeleftEl = this.snackModalEl.querySelector('.timeleft')
+    this.listFilesEl = document.querySelector('#list-of-files-and-directories')
     this.connectFireBase();
-    this.initEvents(); //4
+    this.initEvents();
+    this.readFiles();
   
 
   }
@@ -29,37 +31,37 @@ class DropBoxController{
   }
 
   initEvents() {
-    this.btnSendFileEl.addEventListener('click', e => {
-      this.inputFilesEl.click();
+    this.btnSendFileEl.addEventListener('click', e => {// quando houver um evento de click
+      this.inputFilesEl.click(); // force o click elemento input
     })
 
-    this.inputFilesEl.addEventListener('change', e => {
-      //Desabilita o botão para evitar infileiramento
-      this.btnSendFileEl.disabled = true;
+    this.inputFilesEl.addEventListener('change', e => { // change fica verificando se o valor do input foi alterado
+      
+      this.btnSendFileEl.disabled = true; //Desabilita o botão para evitar infileiramento
 
 
-      // e.target.files recebe uma coleção com 1 ou mais itens
+      // e.target.files recebe uma coleção com um ou mais itens.
       //Envia para o servidor os arquivos
       this.updateTask(e.target.files).then( responses =>{ // retorna varias promisses
 
-        responses.forEach( resp =>{
+        responses.forEach( resp =>{ 
          //console.log(resp.files['input-file']);
-          this.getFirebaseRef().push().set(resp.files['input-file'])
+          this.getFirebaseRef().push().set(resp.files['input-file']) // inseri os dados do arquivo file.
         })
 
         this.uploadComplite() //reseta form
-      }).catch(err =>{
+      }).catch(err =>{// Se houver erro nas promises 
         this.uploadComplite() //reseta form
         console.error(err)
       })
       
-      this.modalShow();
+      this.modalShow();// mosta a barra de upgrade
       
     })
 
   }
 /** uploadComplite 
- *  Quando processo é completado, fechamos a barra, e limpamos o form
+ *  Quando processo é completado, fechamos a barra de progresso, e limpamos o form
 */
   uploadComplite(){
     //toggle da barra de progress de update
@@ -95,16 +97,16 @@ class DropBoxController{
         }
 
         ajax.upload.onprogress = event =>{ // executa toda vez que envia um novo pedaço do pacote
-          this.uploadProgress(event, file);
+          this.uploadProgress(event, file); //Controla o processo de update dos arquivos
         }
 
-        let formData = new FormData();
+        let formData = new FormData(); //Cria um obj FormData
 
         formData.append('input-file', file);
 
-        this.startUploadTime = Date.now();
+        this.startUploadTime = Date.now(); // milisegundos 
 
-        ajax.send(formData);
+        ajax.send(formData); // enviar os valores formatados com obj formData
       }));
     });
     return Promise.all(promises);
@@ -152,13 +154,12 @@ class DropBoxController{
 
   }// formatTimeToHuman
 
-/**
- * 
+/** getFirebaseRef
+ *  Cria um nó(referencia) dentro do banco firebase
  */
   getFirebaseRef(){
     return firebase.database().ref("files")
   }
-
 
 /** modalShow
  *  Toggle da barra de progresso
@@ -168,9 +169,9 @@ class DropBoxController{
   } //modalShow
 
   /** getFileIconView
-   * Verifica qual o icone que vai ser mostrado na tela com base no typo do arquivo
+   * Verifica qual o icone que vai ser mostrado na tela com base no type do arquivo
    */
-  getFileIconView(){
+  getFileIconView(file){
     switch (file.type) {
       case 'folder':
         return `
@@ -337,18 +338,38 @@ class DropBoxController{
   } //getFileIconView
 
 /** getFileView
- * Exibe uma li com dados do arquivo.
+ * Exibe uma li com dados, e icone do arquivo.
  */
-  getFileView(file) {
-    return `
-    <li>
+  getFileView(file, key) {
+    let li = document.createElement('li');
+    li.dataset.key = key;
+
+    li.innerHTML = `
         ${this.getFileIconView(file)}
         <div class="name text-center">${file.name}</div>
-    </li>
     `
+    return  li;
   }// getFileView
 
- 
+/** readFiles
+ * Recupera os dados que estão na ferencia, observando se há alterações nos valores armazenados.
+ */
+  readFiles(){ // chamado no construtor
+    
+    // o method .on fica observando os values do banco, verificando alterações, 
+    this.getFirebaseRef().on('value', snapshot =>{
+      this.listFilesEl.innerHTML = "" // limpa antes de inserir os dados
+      snapshot.forEach( snapshotItem =>{ //snapshot é uma coleção, e coleções podem ser acessadas com forEach
+
+        let key = snapshotItem.key // recebe o id(key)
+        let data = snapshotItem.val() // recebe os dados
+        console.log(key, data)
+
+        this.listFilesEl.appendChild(this.getFileView(data, key));
+      })
+
+    })
+  } // readFiles
 
 
 } 

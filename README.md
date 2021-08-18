@@ -277,7 +277,18 @@ const obj = {
 
 //dessa forma evitamos erros na hora da leitura do codigo
 let itemName  =  obj.files.['input-file'].name
-
 console.log(itemName);
+~~~
 
+#### .appendChild
+~~~Javascript
+// Dessa forma foi passado uma tag html
+let body = document.getElementById('body');
+let h1 = `<h1> testando appendChild</h1>`;
+body.appendChild(h1); // Error
+//-------------------------------------
+// Dessa forma foi passado um elemento html
+let h2 = document.createElement('h1');
+h2.innerHTML = `testando appendChild`
+body.appendChild(h2); // Success
 ~~~
