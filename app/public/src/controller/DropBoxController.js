@@ -1,19 +1,25 @@
 class DropBoxController{
   constructor(){
-    
+    this.onselectionchange = new Event('selectionchange'); //criando um event selectionchange
     this.btnSendFileEl = document.querySelector('#btn-send-file'); //1
     this.inputFilesEl = document.querySelector('#files'); //2
     this.snackModalEl = document.querySelector('#react-snackbar-root');//3 
-    this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg')
-    this.namefileEl = this.snackModalEl.querySelector('.filename')
-    this.timeleftEl = this.snackModalEl.querySelector('.timeleft')
-    this.listFilesEl = document.querySelector('#list-of-files-and-directories')
+    this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg');
+    this.namefileEl = this.snackModalEl.querySelector('.filename');
+    this.timeleftEl = this.snackModalEl.querySelector('.timeleft');
+    this.listFilesEl = document.querySelector('#list-of-files-and-directories');
+    
+    this.btnNewFolder = document.querySelector('#btn-new-folder');
+    this.btnRename = document.querySelector('#btn-rename');
+    this.btnDelete = document.querySelector('#btn-delete');
+    
     this.connectFireBase();
     this.initEvents();
     this.readFiles();
   
 
   }
+
   connectFireBase(){
     var firebaseConfig = {
       apiKey: "AIzaSyDMSkvvD44RDcigLvI-EvzA1Uxt6F0yFMc",
@@ -28,9 +34,35 @@ class DropBoxController{
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.analytics();
-  }
+  } //connectFireBase
+
+/** uploadComplite 
+ *  Retorna as li que estão com com a class .selected
+*/
+  getSelection(){
+      return this.listFilesEl.querySelectorAll('.selected')
+  } //getSelection
 
   initEvents() {
+    this.listFilesEl.addEventListener('selectionchange', e =>{
+      console.log('selectionchange', this.getSelection().length)
+       switch (this.getSelection().length) {
+         case 0:
+           this.btnDelete.style.display = 'none';
+           this.btnRename.style.display = 'none';
+           break;
+        case 1:
+          this.btnDelete.style.display = 'block';
+          this.btnRename.style.display = 'block';
+          break;
+       
+         default:
+          this.btnDelete.style.display = 'block';
+          this.btnRename.style.display = 'none';
+           break;
+       }
+    })
+
     this.btnSendFileEl.addEventListener('click', e => {// quando houver um evento de click
       this.inputFilesEl.click(); // force o click elemento input
     })
@@ -377,6 +409,8 @@ class DropBoxController{
  */
   initEventsLi(li){
     li.addEventListener('click', e =>{
+
+
       if(e.shiftKey){ // Se o shit estiver precionado faça:
         // Pega a primeira li com a class .selected
           let firstLi = this.listFilesEl.querySelector('.selected');
@@ -399,6 +433,10 @@ class DropBoxController{
                 el.classList.add('selected');
               }
             })
+            
+            //O evento 'onselectionchange' está sendo criado no contrutor 
+            this.listFilesEl.dispatchEvent(this.onselectionchange)// se ocorrer algum evento, informe
+
             return true ; // Para a execução, se não a proxima função vai remover os selected
           }
       }
@@ -409,6 +447,9 @@ class DropBoxController{
         })
       }
       li.classList.toggle('selected')
+      
+      //O evento 'onselectionchange' está sendo criado no contrutor 
+      this.listFilesEl.dispatchEvent(this.onselectionchange)// se ocorrer algum evento, informe
 
     })
 
