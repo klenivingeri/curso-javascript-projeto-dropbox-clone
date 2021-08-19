@@ -2,6 +2,7 @@ class DropBoxController{
   constructor(){
     this.currentFolder = ['hcode']
     this.onselectionchange = new Event('selectionchange'); //criando um event selectionchange
+    this.navEl = document.querySelector('#browse-location')
     this.btnSendFileEl = document.querySelector('#btn-send-file'); //1
     this.inputFilesEl = document.querySelector('#files'); //2
     this.snackModalEl = document.querySelector('#react-snackbar-root');//3 
@@ -16,7 +17,7 @@ class DropBoxController{
     
     this.connectFireBase();
     this.initEvents();
-    this.readFiles();
+    this.openFolder();
   
 
   }
@@ -63,6 +64,7 @@ class DropBoxController{
   }
 
   initEvents() {
+
     this.btnNewFolder.addEventListener('click', event =>{
       let name = prompt('Nome da nova pasta')
       if(name){
@@ -256,8 +258,9 @@ class DropBoxController{
 /** getFirebaseRef
  *  Cria um nó(referencia) dentro do banco firebase
  */
-  getFirebaseRef(){
-    return firebase.database().ref("files")
+  getFirebaseRef(path){
+    if(!path) path = this.currentFolder.join('/')
+    return firebase.database().ref(path)
   }
 
 /** modalShow
@@ -457,6 +460,7 @@ class DropBoxController{
  */
   readFiles(){ // chamado no construtor
     
+    this.lastFolder = this.currentFolder.join('/');
     // o method .on fica observando os values do banco, verificando alterações, 
     this.getFirebaseRef().on('value', snapshot =>{
       this.listFilesEl.innerHTML = "" // limpa antes de inserir os dados
@@ -465,16 +469,77 @@ class DropBoxController{
         let key = snapshotItem.key // recebe o id(key)
         let data = snapshotItem.val() // recebe os dados
 
-        this.listFilesEl.appendChild(this.getFileView(data, key));
+        if(data.type){
+          this.listFilesEl.appendChild(this.getFileView(data, key));
+        }
+        
       })
 
     })
   } // readFiles
 
+  openFolder(){
+    if(this.lastFolder) this.getFirebaseRef(this.lastFolder).off('value');
+    this.renderNav();
+    this.readFiles();
+  }
+  renderNav(){
+    let nav = document.createElement('nav');
+    let path = []
+    for(let i = 0; i< this.currentFolder.length; i++){
+      let folderName = this.currentFolder[i];
+      let span  = document.createElement('span')
+
+      path.push(folderName)
+      
+      if((i+1) === this.currentFolder.length){
+        span.innerHTML = folderName
+      }else{
+        span.className = 'breadcrumb-segment__wrapper'
+        span.innerHTML = `
+          <span class="ue-effect-container uee-BreadCrumbSegment-link-0">
+              <a href="#" data-path="${path.join('/')}" class="breadcrumb-segment">${folderName}</a>
+          </span>
+          <svg width="24" height="24" viewBox="0 0 24 24" class="mc-icon-template-stateless" style="top: 4px; position: relative;">
+              <title>arrow-right</title>
+              <path d="M10.414 7.05l4.95 4.95-4.95 4.95L9 15.534 12.536 12 9 8.464z" fill="#637282" fill-rule="evenodd"></path>
+          </svg>
+        `;
+        
+      }
+      nav.appendChild(span)
+    }
+    this.navEl.innerHTML = nav.innerHTML;
+
+    this.navEl.querySelectorAll('a').forEach( a=>{
+       a.addEventListener('click', e =>{
+         e.preventDefault();
+         this.currentFolder = a.dataset.path.split('/')
+
+         this.openFolder();
+       })
+    })
+  }
+
 /** initEventsLi
  * Adiciona um evento para verificar a interação do usuario com as li
  */
   initEventsLi(li){
+
+    li.addEventListener('dblclick', e=>{
+      let file  = JSON.parse(li.dataset.file)
+
+      switch(file.type) {
+        case 'folder':
+          this.currentFolder.push(file.name)
+          this.openFolder();
+          break;
+          default:
+            window.open('/file?path=' + file.path)
+            
+      }
+    })
+
     li.addEventListener('click', e =>{
 
 
