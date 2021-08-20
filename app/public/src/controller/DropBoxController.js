@@ -134,7 +134,16 @@ class DropBoxController{
 
         responses.forEach( resp =>{ 
          //console.log(resp.files['input-file']);
-          this.getFirebaseRef().push().set(resp.files['input-file']) // inseri os dados do arquivo file.
+          firebase.storage().ref().child(resp.fullPath).getDownloadURL().then(url => {
+            
+            this.getFirebaseRef().push().set({
+              name: resp.name,
+              type: resp.contentType,
+              path: url,
+              size: resp.size
+            });
+ 
+          })
         })
 
         this.uploadComplite() //reseta form
@@ -193,23 +202,33 @@ class DropBoxController{
 */
   updateTask(files){
     let promises = [];
+    
     [...files].forEach(file => {
+      promises.push(new Promise((resolve, reject) =>{
 
-      let formData = new FormData(); //Cria um obj FormData
-
-      formData.append('input-file', file);
-
-      promises.push(this.ajax('/upload', 'POST', formData, ()=>{
-
-        this.uploadProgress(event,file);
-
-      }, () => {
-
-        this.startUploadTime = Date.now();
-
+        let fileRef = firebase.storage().ref(this.currentFolder.join('/')).child(file.name)
+    
+        let task = fileRef.put(file) // retorna um task
+        // .on recebe 3 funções (process, error, resolve)
+        task.on('state_changed', snapshot =>{ // process
+          this.uploadProgress({
+            loaded: snapshot.bytesTransferred,
+            total: snapshot.totalBytes
+          },file)
+          console.log('progress', snapshot)
+        }, error => { // error
+          console.error(error)
+          reject(error)
+        }, () =>{ // resolve
+            fileRef.getMetadata().then(metadata =>{
+              resolve(metadata)
+            }).catch(err =>{
+              reject(err)
+            })
+        })
       }))
-  
     });
+
     return Promise.all(promises);
 
   } // updateTask
@@ -310,7 +329,7 @@ class DropBoxController{
         `;
       break;
 
-      case 'image/jped':
+      case 'image/jpeg':
       case 'image/jpg':
       case 'image/png':
       case 'image/gif':
