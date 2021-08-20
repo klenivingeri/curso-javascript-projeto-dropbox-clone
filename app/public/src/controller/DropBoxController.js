@@ -483,6 +483,7 @@ class DropBoxController{
     this.renderNav();
     this.readFiles();
   }
+  
   renderNav(){
     let nav = document.createElement('nav');
     let path = []
